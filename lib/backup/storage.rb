@@ -30,7 +30,9 @@ module Backup
       FileUtils.mkdir_p target_path
 
       @server_config.rsync.to_a.map do |path|
-        Backup::Main.run "rsync -rav #{@rsync_host}:#{path} '#{target_path}'"
+        remote_path = path.is_a?(Hash) ? path.first[0] : path
+        target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
+        Backup::Main.run "rsync -rav #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
       end
     end
 

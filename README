@@ -9,7 +9,7 @@ server 'delonghi' do
   host "delonghi@10.0.1.1"
   port "222"
 
-  rsync ['/home/www/app/shared/config', '/home/www/app/shared/attachments']
+  rsync ['/home/www/app/shared/config',{'/home/staging/app/shared/config' => 'staging_config'}, '/home/www/app/shared/attachments']
 
   mysql 'delonghi' do
     user      'root'
