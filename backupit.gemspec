@@ -46,8 +46,8 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{A tool to backup your servers}
   s.test_files = [
-    "test/test_backupit.rb",
-     "test/helper.rb"
+    "test/helper.rb",
+     "test/test_backupit.rb"
   ]
 
   if s.respond_to? :specification_version then

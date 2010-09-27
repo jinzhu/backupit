@@ -8,7 +8,7 @@ rescue LoadError
 end
 
 require 'optparse'
-require 'lib/backup'
+require 'backup'
 
 options = {}
 
