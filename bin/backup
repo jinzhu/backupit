@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+begin
+	require 'rubygems'
+  require 'colored'
+rescue LoadError
+  puts '`colored` is not available. you should: gem install colored'
+	exit
+end
+
+require 'optparse'
+require 'lib/backup'
+
+options = {}
+
+OptionParser.new do |opts|
+	opts.banner = "Usage: backup --pretend -f config_file"
+
+	opts.on( '-f', '--file file', 'configuration file' ) do |file|
+		options[:config] = file
+	end
+
+	opts.on( '-p', '--pretend', 'Run but do not make any changes' ) do |data|
+		options[:pretend] = true
+	end
+
+	opts.on( '-h', '--help', 'Display this screen' ) do
+		puts opts
+		exit
+	end
+	opts.parse!
+end
+
+if !options[:config] && File.exist?('backup.rb')
+	options[:config] = 'backup.rb'
+elsif !options[:config] && File.exist?('config/backup.rb')
+	options[:config] = 'config/backup.rb'
+elsif !options[:config]
+	puts 'No configuration file found'.red
+	exit
+end
+
+Backup::Main.start(options)

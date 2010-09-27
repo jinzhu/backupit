@@ -1,0 +1,19 @@
+= BackUpIt
+
+== Configuration File Example
+storage :file do
+  path 'path'
+end
+
+server 'delonghi' do
+  command "delonghi@10.0.1.1 -p222"
+  rsync ['paths']
+
+  mysql ('name') do
+    user 'user'
+    password 'password'
+    options 'options'
+    databases 'databases'
+    tables 'tables'
+  end
+end
