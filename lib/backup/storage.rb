@@ -55,6 +55,7 @@ module Backup
 
     def commit_changes
       Dir.chdir(@backup_path) do
+        Backup::Main.run("git init") unless system("git status")
         Backup::Main.run("git add .")
         Backup::Main.run("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
       end
