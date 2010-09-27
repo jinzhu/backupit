@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "backupit"
-    gem.summary = %Q{A tool for backup your servers}
-    gem.description = %Q{A tool for backup your servers}
+    gem.summary = %Q{A tool to backup your servers}
+    gem.description = %Q{A tool to backup your servers}
     gem.email = "wosmvp@gmail.com"
     gem.homepage = "http://github.com/jinzhu/backupit"
     gem.authors = ["Jinzhu"]
