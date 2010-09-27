@@ -15,6 +15,11 @@ module Backup
       @server_config = @server.config
       @backup_path   = "#{config.path}/#{@server.name}"
 
+      @ssh_host      = "'#{@server_config.host}'"
+      @scp_host      = @server_config.port ? "-P#{@server_config.port} #{@ssh_host}" : @ssh_host
+      @rsync_host    = @server_config.port ? " -e 'ssh -p#{@server_config.port}' #{@ssh_host}" : @ssh_host
+      @ssh_host      = "'-p#{@server_config.port}' #{@ssh_host}" if @server_config.port
+
       backup_rsync
       backup_mysql
       commit_changes
@@ -25,7 +30,7 @@ module Backup
       FileUtils.mkdir_p target_path
 
       @server_config.rsync.to_a.map do |path|
-        Backup::Main.run "rsync -rav '#{@server_config.command}:#{path}' '#{target_path}'"
+        Backup::Main.run "rsync -rav #{@rsync_host}:#{path} '#{target_path}'"
       end
     end
 
@@ -42,9 +47,9 @@ module Backup
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
-        Backup::Main.run("ssh '#{@server_config.command}' -c '$(which mysqldump) #{mysql_config} > #{tmpfile.path}'") &&
-        Backup::Main.run("scp '#{@server_config.command}:#{tmpfile.path}' '#{target_path}/#{key}.sql'") &&
-        Backup::Main.run("ssh '#{@server_config.command}' -c 'rm #{tmpfile.path}'")
+        Backup::Main.run("ssh #{@ssh_host} -c '$(which mysqldump) #{mysql_config} > #{tmpfile.path}'") &&
+        Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
+        Backup::Main.run("ssh #{@ssh_host} -c 'rm #{tmpfile.path}'")
       end
     end
 

@@ -3,7 +3,7 @@ module Backup
     class Server
       extend Backup::Attribute
 
-      generate_attributes :command,:rsync
+      generate_attributes :host, :rsync, :port
 
       def mysql(name=nil,&block)
         @mysqls ||= {}

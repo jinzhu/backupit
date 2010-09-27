@@ -6,7 +6,9 @@ storage :file do
 end
 
 server 'delonghi' do
-  command "delonghi@10.0.1.1 -p222"
+  host "delonghi@10.0.1.1"
+  port "222"
+
   rsync ['/home/www/app/shared/config', '/home/www/app/shared/attachments']
 
   mysql 'delonghi' do
