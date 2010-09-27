@@ -35,28 +35,28 @@ module Backup
     end
 
     def backup_mysql
-      target_path = File.join(@backup_path, "rsync")
+      target_path = File.join(@backup_path, "mysql")
       FileUtils.mkdir_p target_path
 
       @server_config.mysql.map do |key, mysql|
         mysql_config = ""
         mysql_config += " -u#{mysql.user}" if mysql.user
-        mysql_config += " -p#{mysql.user}" if mysql.password
+        mysql_config += " -p#{mysql.password}" if mysql.password
         mysql_config += " --databases #{mysql.databases.to_a.join(' ')}" if mysql.databases
         mysql_config += " --tables #{mysql.tables.to_a.join(' ')}" if mysql.tables
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
-        Backup::Main.run("ssh #{@ssh_host} -c '$(which mysqldump) #{mysql_config} > #{tmpfile.path}'") &&
+        Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
         Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
-        Backup::Main.run("ssh #{@ssh_host} -c 'rm #{tmpfile.path}'")
+        Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
       end
     end
 
     def commit_changes
       Dir.chdir(@backup_path) do
-        Backup::Main.run("$(which git) add .")
-        Backup::Main.run("$(which git) commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
+        Backup::Main.run("git add .")
+        Backup::Main.run("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
       end
     end
   end
