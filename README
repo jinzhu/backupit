@@ -2,18 +2,21 @@
 
 == Configuration File Example
 storage :file do
-  path 'path'
+  path '/your_backup_path'
 end
 
 server 'delonghi' do
   command "delonghi@10.0.1.1 -p222"
-  rsync ['paths']
+  rsync ['/home/www/app/shared/config', '/home/www/app/shared/attachments']
 
-  mysql ('name') do
-    user 'user'
-    password 'password'
-    options 'options'
-    databases 'databases'
-    tables 'tables'
+  mysql 'delonghi' do
+    user      'root'
+    password  'mypassword'
+    options   '-h 192.168.1.100'
+    databases ['delonghi-staging', 'delonghi-production']
+    tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
   end
 end
+
+
+== Copyright (c) 2010 Jinzhu. See LICENSE for details.
