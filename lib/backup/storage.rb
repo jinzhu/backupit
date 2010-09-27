@@ -11,15 +11,17 @@ module Backup
     end
 
     def backup(server)
-      @server = server
+      @server        = server
       @server_config = @server.config
+      @backup_path   = "#{config.path}/#{@server.name}"
 
       backup_rsync
       backup_mysql
+      commit_changes
     end
 
     def backup_rsync
-      target_path = "#{config.path}/#{@server.name}/rsync"
+      target_path = File.join(@backup_path, "rsync")
       FileUtils.mkdir_p target_path
 
       @server_config.rsync.to_a.map do |path|
@@ -28,7 +30,7 @@ module Backup
     end
 
     def backup_mysql
-      target_path = "#{config.path}/#{@server.name}/mysql"
+      target_path = File.join(@backup_path, "rsync")
       FileUtils.mkdir_p target_path
 
       @server_config.mysql.map do |key, mysql|
@@ -43,6 +45,13 @@ module Backup
         Backup::Main.run("ssh '#{@server_config.command}' -c '$(which mysqldump) #{mysql_config} > #{tmpfile.path}'") &&
         Backup::Main.run("scp '#{@server_config.command}:#{tmpfile.path}' '#{target_path}/#{key}.sql'") &&
         Backup::Main.run("ssh '#{@server_config.command}' -c 'rm #{tmpfile.path}'")
+      end
+    end
+
+    def commit_changes
+      Dir.chdir(@backup_path) do
+        Backup::Main.run("$(which git) add .")
+        Backup::Main.run("$(which git) commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
       end
     end
   end
