@@ -1,9 +1,12 @@
-# backupit
+# BackupIt
+
+## Install
+    $ gem install backupit
 
 ## Configuration File Example
 
     storage :file do
-      path '/your_backup_path'
+      path '/opt/backup/'
     end
 
     server 'delonghi' do
@@ -20,6 +23,22 @@
         tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
       end
     end
+
+    server 'onitsukatiger' do
+      host "otiger2@192.168.1.4"
+
+      mysql 'ot_staging' do
+        user      'root'
+        password  'mytopsecret'
+        databases 'ot_staging'
+      end
+    end
+
+## Usage
+    1, backup --pretend -f /opt/backup/backup.rb delonghi
+       only backup server 'delonghi'  (pretend to run)
+    2, backup -f /opt/backup/backup.rb
+       backup all servers
 
 ## Note on Patches/Pull Requests
 

@@ -8,14 +8,16 @@ rescue LoadError
 end
 
 require 'optparse'
-require 'backup'
+require 'lib/backup'
 
 options = {}
 
 OptionParser.new do |opts|
-	opts.banner = "Usage: backup --pretend -f config_file"
+	opts.banner = "Usage: backup --pretend -f config_file server1 server2
+         default config file: ./backup.rb or ./config/backup.rb
+         default backup all servers\n\n"
 
-	opts.on( '-f', '--file file', 'configuration file' ) do |file|
+	opts.on( '-f', '--file file', 'Configuration file' ) do |file|
 		options[:config] = file
 	end
 
@@ -29,6 +31,8 @@ OptionParser.new do |opts|
 	end
 	opts.parse!
 end
+
+options[:name] = ARGV
 
 if !options[:config] && File.exist?('backup.rb')
 	options[:config] = 'backup.rb'

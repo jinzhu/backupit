@@ -14,6 +14,8 @@ module Backup
 
       @configuration.storage.map do |storage_key, storage_value|
         @configuration.server.map do |name, config|
+          next if options[:name].size > 0 && options[:name].select {|n| n == name }.size == 0
+
           server = Backup::Server.new
           server.name    = name
           server.config  = config
