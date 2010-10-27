@@ -5,26 +5,24 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backupit}
-  s.version = "0.0.2"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jinzhu"]
-  s.date = %q{2010-09-27}
+  s.date = %q{2010-10-27}
   s.default_executable = %q{backup}
   s.description = %q{A tool to backup your servers}
   s.email = %q{wosmvp@gmail.com}
   s.executables = ["backup"]
   s.extra_rdoc_files = [
     "LICENSE",
-     "README",
-     "README.rdoc"
+     "README.md"
   ]
   s.files = [
     ".document",
      ".gitignore",
      "LICENSE",
-     "README",
-     "README.rdoc",
+     "README.md",
      "Rakefile",
      "VERSION",
      "backupit.gemspec",
