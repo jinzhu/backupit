@@ -7,8 +7,9 @@ rescue LoadError
 	exit
 end
 
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__),'..','lib'))
 require 'optparse'
-require 'lib/backup'
+require 'backup'
 
 options = {}
 
