@@ -14,10 +14,16 @@ module Backup
       @server        = server
       @server_config = @server.config
       @backup_path   = "#{config.path}/#{@server.name}"
+      @backup_user   = "#{config.user || 'root'}"
 
-      @ssh_host      = "-p#{@server_config.port || 22} #{@server_config.host}"
-      @scp_host      = "-P#{@server_config.port || 22} #{@server_config.host}"
-      @rsync_host    = "-e 'ssh -p#{@server_config.port || 22}' #{@server_config.host}"
+      @ssh_host      = "#{@server_config.host}"
+      @scp_host      = "#{@server_config.host}"
+      @rsync_host    = "#{@server_config.host}"
+
+      # TODO: Add individual options here
+      @ssh_opts      = "-p#{@server_config.port || 22}"
+      @scp_opts      = "-P#{@server_config.port || 22}"
+      @rsync_opts    = "-e 'ssh -p#{@server_config.port || 22}'"
 
       backup_rsync
       backup_mysql
@@ -31,7 +37,7 @@ module Backup
       @server_config.rsync.to_a.map do |path|
         remote_path = path.is_a?(Hash) ? path.first[0] : path
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
-        Backup::Main.run "rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
+        Backup::Main.run "rsync -ravk #{@rsync_opts} #{@backup_user}@#{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
       end
       commit_changes(target_path)
     end
@@ -49,9 +55,9 @@ module Backup
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
-        Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
-        Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
-        Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
+        Backup::Main.run("ssh #{@ssh_opts} #{@backup_user}@#{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
+          Backup::Main.run("scp #{@scp_opts} #{@backup_user}@#{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
+          Backup::Main.run("ssh #{@ssh_opts} #{@backup_user}@#{@ssh_host} 'rm #{tmpfile.path}'")
       end
       commit_changes(target_path)
     end
