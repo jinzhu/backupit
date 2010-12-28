@@ -52,6 +52,7 @@ module Backup
         mysql_config += " -p#{mysql.password}" if mysql.password
         mysql_config += " --databases #{mysql.databases.to_a.join(' ')}" if mysql.databases
         mysql_config += " --tables #{mysql.tables.to_a.join(' ')}" if mysql.tables
+        mysql_config += " -A" if mysql.databases.nil? and mysql.tables.nil?
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
