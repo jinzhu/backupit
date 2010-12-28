@@ -21,7 +21,6 @@ module Backup
 
       backup_rsync
       backup_mysql
-      commit_changes
     end
 
     def backup_rsync
@@ -34,6 +33,7 @@ module Backup
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
         Backup::Main.run "rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
       end
+      commit_changes(target_path)
     end
 
     def backup_mysql
@@ -53,10 +53,11 @@ module Backup
         Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
         Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
       end
+      commit_changes(target_path)
     end
 
-    def commit_changes
-      Dir.chdir(@backup_path) do
+    def commit_changes(path)
+      Dir.chdir(path) do
         Backup::Main.run("git init") unless system("git status")
         Backup::Main.run("git add .")
         Backup::Main.run("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
