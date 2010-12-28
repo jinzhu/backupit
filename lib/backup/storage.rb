@@ -26,7 +26,7 @@ module Backup
       @rsync_opts    = "-e 'ssh -p#{@server_config.port || 22}'"
 
       backup_rsync unless @server_config.rsync.nil?
-      backup_mysql unless @server_config.mysql.nil?
+      backup_mysql unless @server_config.mysql.empty?
     end
 
     def backup_rsync
