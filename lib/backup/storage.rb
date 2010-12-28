@@ -15,11 +15,9 @@ module Backup
       @server_config = @server.config
       @backup_path   = "#{config.path}/#{@server.name}"
 
-      @ssh_host      = "'#{@server_config.host}'"
-      @scp_host      = @server_config.port ? "-P#{@server_config.port} #{@ssh_host}" : @ssh_host
-      @rsync_host    = @server_config.port ? " -e 'ssh -p#{@server_config.port}' #{@ssh_host}" : @ssh_host
-      @ssh_host      = "'-p#{@server_config.port}' #{@ssh_host}" if @server_config.port
-
+      @ssh_host      = "-p#{@server_config.port || 22} #{@server_config.host}"
+      @scp_host      = "-P#{@server_config.port || 22} #{@server_config.host}"
+      @rsync_host    = "-e 'ssh -p#{@server_config.port || 22}' #{@server_config.host}"
 
       backup_rsync
       backup_mysql
@@ -28,6 +26,7 @@ module Backup
 
     def backup_rsync
       target_path = File.join(@backup_path, "rsync")
+
       FileUtils.mkdir_p target_path
 
       @server_config.rsync.to_a.map do |path|
