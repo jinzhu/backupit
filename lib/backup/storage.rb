@@ -14,7 +14,7 @@ module Backup
       @server        = server
       @server_config = @server.config
       @backup_path   = "#{config.path}/#{@server.name}"
-      @backup_user   = "#{config.user || 'root'}"
+      @backup_user   = "#{@server_config.user || config.user || 'root'}"
 
       @ssh_host      = "#{@server_config.host}"
       @scp_host      = "#{@server_config.host}"
