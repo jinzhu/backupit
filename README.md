@@ -7,6 +7,7 @@
 
     storage :file do
       path '/opt/backup/'
+      user 'backupuser'
     end
 
     server 'delonghi' do
@@ -26,6 +27,7 @@
 
     server 'onitsukatiger' do
       host "otiger2@192.168.1.4"
+      user "root"
 
       mysql 'ot_staging' do
         user      'root'
