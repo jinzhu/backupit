@@ -10,7 +10,7 @@ begin
     gem.email = "wosmvp@gmail.com"
     gem.homepage = "http://github.com/jinzhu/backupit"
     gem.authors = ["Jinzhu"]
-    gem.add_dependency = ['mail']
+    gem.add_dependency ['mail']
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
