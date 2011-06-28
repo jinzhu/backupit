@@ -21,6 +21,7 @@ module Backup
 
       backup_rsync
       backup_mysql
+      notice_changes
       commit_changes
     end
 
@@ -52,6 +53,20 @@ module Backup
         Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
         Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
         Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
+      end
+    end
+
+    def notice_changes
+      Dir.chdir(@backup_path) do
+        smtp_config = config.smtp
+        Mail.defaults { delivery_method :smtp, smtp_config } if smtp_config
+
+        changes = `git diff`
+        Backup::Main.email(:from => @server_config.email,
+                           :to => @server_config.email,
+                           :subject => "#{@server.name} backed up at #{Time.now}, changes: #{changes.split("\n").size}",
+                           :body => changes
+                          ) if @server_config.email
       end
     end
 

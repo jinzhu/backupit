@@ -1,4 +1,6 @@
 $LOAD_PATH.unshift(File.dirname(__FILE__))
+gem 'mail'
+require 'mail'
 require 'backup/attribute'
 require 'backup/configuration/base'
 require 'backup/server'
@@ -28,6 +30,13 @@ module Backup
     def self.run(shell)
       puts shell.red
       @@options[:pretend] ? true : system(shell)
+    end
+
+    def self.email(options)
+      puts "sending email to #{options[:to]}"
+      unless @@options[:pretend]
+        Mail.new(options).deliver!
+      end
     end
   end
 end
