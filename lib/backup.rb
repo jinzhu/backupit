@@ -29,7 +29,13 @@ module Backup
 
     def self.run(shell)
       puts shell.red
-      @@options[:pretend] ? true : system(shell)
+      if @@options[:pretend]
+        true
+      else
+        results = `#{shell}`
+        return false if $?.to_i > 0
+        results
+      end
     end
 
     def self.email(options)

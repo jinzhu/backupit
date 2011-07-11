@@ -3,7 +3,7 @@ require 'tempfile'
 module Backup
   class Storage
     extend Backup::Attribute
-    attr_accessor :name, :config
+    attr_accessor :name, :config, :changes
 
     def initialize(name, config)
       self.name   = name
@@ -19,10 +19,12 @@ module Backup
       @scp_host      = "-P#{@server_config.port || 22} #{@server_config.host}"
       @rsync_host    = "-e 'ssh -p#{@server_config.port || 22}' #{@server_config.host}"
 
+      self.changes   = []
+
       backup_rsync
       backup_mysql
-      notice_changes
       commit_changes
+      notice_changes
     end
 
     def backup_rsync
@@ -33,7 +35,7 @@ module Backup
       @server_config.rsync.to_a.map do |path|
         remote_path = path.is_a?(Hash) ? path.first[0] : path
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
-        Backup::Main.run "rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
+        self.changes << Backup::Main.run "rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
       end
     end
 
@@ -50,9 +52,9 @@ module Backup
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
-        Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
-        Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
-        Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
+        self.changes << Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
+        self.changes << Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
+        self.changes << Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
       end
     end
 
@@ -61,20 +63,20 @@ module Backup
         smtp_config = config.smtp
         Mail.defaults { delivery_method :smtp, smtp_config } if smtp_config
 
-        changes = `git diff`
         Backup::Main.email(:from => @server_config.email,
                            :to => @server_config.email,
-                           :subject => "#{@server.name} backed up at #{Time.now}, changes: #{changes.split("\n").size}",
-                           :body => changes
+                           :subject => "#{@server.name} backed up at #{Time.now}",
+                           :body => changes.join("\n"),
+                           :charset => 'utf-8', :content_type => 'text/plain; charset=utf-8'
                           ) if @server_config.email
       end
     end
 
     def commit_changes
       Dir.chdir(@backup_path) do
-        Backup::Main.run("git init") unless system("git status")
-        Backup::Main.run("git add .")
-        Backup::Main.run("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
+        (self.changes << Backup::Main.run("git init")) unless system("git status")
+        self.changes << Backup::Main.run("git add .")
+        self.changes << Backup::Main.run("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
       end
     end
   end
