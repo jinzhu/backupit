@@ -35,7 +35,7 @@ module Backup
       @server_config.rsync.to_a.map do |path|
         remote_path = path.is_a?(Hash) ? path.first[0] : path
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
-        self.changes << Backup::Main.run "rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'"
+        self.changes << Backup::Main.run("rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'")
       end
     end
 
@@ -52,9 +52,9 @@ module Backup
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
-        self.changes << Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
-        self.changes << Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
-        self.changes << Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
+        (self.changes << Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'")) &&
+        (self.changes << Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'")) &&
+        (self.changes << Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'"))
       end
     end
 
