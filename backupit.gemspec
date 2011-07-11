@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backupit}
-  s.version = "0.2.0"
+  s.version = "0.2.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jinzhu"]
-  s.date = %q{2011-06-28}
+  s.date = %q{2011-07-11}
   s.default_executable = %q{backup}
   s.description = %q{A tool to backup your servers}
   s.email = %q{wosmvp@gmail.com}
@@ -39,12 +39,8 @@ Gem::Specification.new do |s|
   ]
   s.homepage = %q{http://github.com/jinzhu/backupit}
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.4.2}
+  s.rubygems_version = %q{1.6.2}
   s.summary = %q{A tool to backup your servers}
-  s.test_files = [
-    "test/helper.rb",
-    "test/test_backupit.rb"
-  ]
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
