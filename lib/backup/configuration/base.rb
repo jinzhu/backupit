@@ -28,6 +28,18 @@ module Backup
 
         @servers
       end
+
+      def check(name=nil,&block)
+        @check ||= {}
+
+        if block
+          name ||= "check_#{@check.keys.size}"
+          @check[name] = Backup::Configuration::Check.new 
+          @check[name].instance_eval &block
+        end
+
+        @check
+      end
     end
   end
 end

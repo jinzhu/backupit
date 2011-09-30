@@ -3,7 +3,7 @@ require 'tempfile'
 module Backup
   class Storage
     extend Backup::Attribute
-    attr_accessor :name, :config, :changes
+    attr_accessor :name, :config, :changes, :check
 
     def initialize(name, config)
       self.name   = name
@@ -13,6 +13,7 @@ module Backup
     def backup(server)
       @server        = server
       @server_config = @server.config
+      @server_check  = @server.check
       @backup_path   = "#{config.path}/#{@server.name}"
 
       @ssh_host      = "-p#{@server_config.port || 22} #{@server_config.host}"
@@ -55,6 +56,12 @@ module Backup
         (self.changes << Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'")) &&
         (self.changes << Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'")) &&
         (self.changes << Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'"))
+
+        #check the backup if config is setted
+        if @server_check != nil
+          backup_check(target_path,key)
+        end
+
       end
     end
 
@@ -69,6 +76,27 @@ module Backup
                            :body => changes.join("\n"),
                            :charset => 'utf-8', :content_type => 'text/plain; charset=utf-8'
                           ) if @server_config.email
+      end
+    end
+
+    def report_error(target_path,key)
+      Dir.chdir(@backup_path) do
+        smtp_config = config.smtp
+        Mail.defaults { delivery_method :smtp, smtp_config } if smtp_config
+
+        Backup::Main.email(:from => @server_config.email,
+                           :to => @server_config.email,
+                           :subject => "#{@server.name} backed up at #{Time.now}",
+                           :body => "#{target_path}/#{key}.sql can not be restored",
+                           :charset => 'utf-8', :content_type => 'text/plain; charset=utf-8'
+                          ) if @server_config.email
+      end
+    end
+
+    def backup_check(target_path,key)
+      status = system "mysql -h#{@server_check[:host]} -u#{@server_check[:user]} -p#{@server_check[:password]} #{@server_check[:databases]} < #{target_path}/#{key}.sql"
+      if !status 
+        report_error(target_path,key)
       end
     end
 

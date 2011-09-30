@@ -1,6 +1,6 @@
 module Backup
-  class Server
-    attr_accessor :config, :name, :storage, :check
+  class Check
+    attr_accessor :config, :name, :storage
 
     def backup
       storage.backup(self) if storage

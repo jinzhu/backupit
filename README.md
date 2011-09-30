@@ -5,6 +5,10 @@
 
 ## Configuration File Example
 
+    check :checkdb do
+      config({:host=>"localhost",:user=>"root",:password=>"test",:databases=>"checkdb"})
+    end
+
     storage :file do
       path '/opt/backup/'
     end
@@ -39,6 +43,7 @@
        only backup server 'delonghi'  (pretend to run)
     2, backup -f /opt/backup/backup.rb
        backup all servers
+    3, if you do not want to test whether the backup can be restore or not , comment the config line
 
 ## Note on Patches/Pull Requests
 

@@ -5,6 +5,7 @@ require 'backup/attribute'
 require 'backup/configuration/base'
 require 'backup/server'
 require 'backup/storage'
+require 'backup/check'
 
 module Backup
   class Main
@@ -14,6 +15,10 @@ module Backup
       @configuration = Backup::Configuration::Base.new
       @configuration.instance_eval { eval File.read(options[:config]) }
 
+      @configuration.check.map do | storage_key, storage_value |
+        @check =  storage_value
+      end
+
       @configuration.storage.map do |storage_key, storage_value|
         @configuration.server.map do |name, config|
           next if options[:name].size > 0 && options[:name].select {|n| n == name }.size == 0
@@ -22,6 +27,7 @@ module Backup
           server.name    = name
           server.config  = config
           server.storage = Backup::Storage.new(storage_key, storage_value)
+          server.check = @check.config
           server.backup
         end
       end
