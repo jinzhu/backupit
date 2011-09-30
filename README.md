@@ -5,12 +5,10 @@
 
 ## Configuration File Example
 
-    check :checkdb do
-      config({:host=>"localhost",:user=>"root",:password=>"test",:databases=>"checkdb"})
-    end
-
     storage :file do
       path '/opt/backup/'
+      mysql_check true
+      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:databases=>"checkdb"})
     end
 
     server 'delonghi' do
@@ -25,6 +23,7 @@
         options   '-h 192.168.1.100'
         databases ['delonghi-staging', 'delonghi-production']
         tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
+        check true
       end
     end
 
@@ -35,6 +34,7 @@
         user      'root'
         password  'mytopsecret'
         databases 'ot_staging'
+        check false
       end
     end
 
@@ -43,7 +43,8 @@
        only backup server 'delonghi'  (pretend to run)
     2, backup -f /opt/backup/backup.rb
        backup all servers
-    3, if you do not want to test whether the backup can be restore or not , comment the config line
+    3, in storage , mysql_check(true | false) and mysql_config to check the backup can be restored
+    4, in every mysql role, check mean to check the backup or not
 
 ## Note on Patches/Pull Requests
 

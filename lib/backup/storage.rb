@@ -3,7 +3,7 @@ require 'tempfile'
 module Backup
   class Storage
     extend Backup::Attribute
-    attr_accessor :name, :config, :changes, :check
+    attr_accessor :name, :config, :changes
 
     def initialize(name, config)
       self.name   = name
@@ -13,7 +13,6 @@ module Backup
     def backup(server)
       @server        = server
       @server_config = @server.config
-      @server_check  = @server.check
       @backup_path   = "#{config.path}/#{@server.name}"
 
       @ssh_host      = "-p#{@server_config.port || 22} #{@server_config.host}"
@@ -25,7 +24,7 @@ module Backup
       backup_rsync
       backup_mysql
       commit_changes
-      notice_changes
+      send_mail(changes.join("\n"))
     end
 
     def backup_rsync
@@ -58,14 +57,14 @@ module Backup
         (self.changes << Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'"))
 
         #check the backup if config is setted
-        if @server_check != nil
-          backup_check(target_path,key)
+        if config.mysql_check and mysql.check 
+            backup_check(target_path,key)
         end
 
       end
     end
 
-    def notice_changes
+    def send_mail(message)
       Dir.chdir(@backup_path) do
         smtp_config = config.smtp
         Mail.defaults { delivery_method :smtp, smtp_config } if smtp_config
@@ -73,35 +72,22 @@ module Backup
         Backup::Main.email(:from => @server_config.email,
                            :to => @server_config.email,
                            :subject => "#{@server.name} backed up at #{Time.now}",
-                           :body => changes.join("\n"),
-                           :charset => 'utf-8', :content_type => 'text/plain; charset=utf-8'
-                          ) if @server_config.email
-      end
-    end
-
-    def report_error(target_path,key)
-      Dir.chdir(@backup_path) do
-        smtp_config = config.smtp
-        Mail.defaults { delivery_method :smtp, smtp_config } if smtp_config
-
-        Backup::Main.email(:from => @server_config.email,
-                           :to => @server_config.email,
-                           :subject => "#{@server.name} backed up at #{Time.now}",
-                           :body => "#{target_path}/#{key}.sql can not be restored",
+                           :body => message,
                            :charset => 'utf-8', :content_type => 'text/plain; charset=utf-8'
                           ) if @server_config.email
       end
     end
 
     def backup_check(target_path,key)
-      if @server_check[:password] == ""
-        status = system "mysql -h#{@server_check[:host]} -u#{@server_check[:user]} #{@server_check[:databases]} < #{target_path}/#{key}.sql"
+      if config.mysql_config[:password] == ""
+        status = system "mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql"
       else
-        status = system "mysql -h#{@server_check[:host]} -u#{@server_check[:user]} -p#{@server_check[:password]} #{@server_check[:databases]} < #{target_path}/#{key}.sql"
+        status = system "mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} -p#{config.mysql_config[:password]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql"
       end
 
       if !status 
-        report_error(target_path,key)
+        message = "Error: #{target_path}/#{key}.sql can not be restored",
+        send_mail(message)
       end
     end
 
