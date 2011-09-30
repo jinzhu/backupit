@@ -94,7 +94,12 @@ module Backup
     end
 
     def backup_check(target_path,key)
-      status = system "mysql -h#{@server_check[:host]} -u#{@server_check[:user]} -p#{@server_check[:password]} #{@server_check[:databases]} < #{target_path}/#{key}.sql"
+      if @server_check[:password] == ""
+        status = system "mysql -h#{@server_check[:host]} -u#{@server_check[:user]} #{@server_check[:databases]} < #{target_path}/#{key}.sql"
+      else
+        status = system "mysql -h#{@server_check[:host]} -u#{@server_check[:user]} -p#{@server_check[:password]} #{@server_check[:databases]} < #{target_path}/#{key}.sql"
+      end
+
       if !status 
         report_error(target_path,key)
       end
