@@ -79,6 +79,7 @@ module Backup
     end
 
     def backup_check(target_path,key)
+      puts "DBCheck running -- #{target_path}/#{key}.sql on checking"
       if config.mysql_config[:password] == ""
         status = system "mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql"
       else
@@ -88,6 +89,8 @@ module Backup
       if !status 
         message = "Error: #{target_path}/#{key}.sql can not be restored"
         send_mail(message)
+      else
+        puts "everything is ok :)"
       end
     end
 
