@@ -86,7 +86,7 @@ module Backup
       end
 
       if !status 
-        message = "Error: #{target_path}/#{key}.sql can not be restored",
+        message = "Error: #{target_path}/#{key}.sql can not be restored"
         send_mail(message)
       end
     end
