@@ -3,7 +3,7 @@ require 'tempfile'
 module Backup
   class Storage
     extend Backup::Attribute
-    attr_accessor :name, :config, :changes
+    attr_accessor :name, :config, :changes, :subject_prefix
 
     def initialize(name, config)
       self.name   = name
@@ -35,7 +35,7 @@ module Backup
       @server_config.rsync.to_a.map do |path|
         remote_path = path.is_a?(Hash) ? path.first[0] : path
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
-        self.changes << Backup::Main.run("rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'")
+        run_with_changes("rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'")
       end
     end
 
@@ -52,16 +52,34 @@ module Backup
         mysql_config += " #{mysql.options}" if mysql.options
 
         tmpfile = Tempfile.new('mysql.sql')
-        (self.changes << Backup::Main.run("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'")) &&
-        (self.changes << Backup::Main.run("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'")) &&
-        (self.changes << Backup::Main.run("ssh #{@ssh_host} 'rm #{tmpfile.path}'"))
+        run_with_changes("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
+        run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
+        run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'"))
 
-        #check the backup if config is setted
-        if config.mysql_check and mysql.check 
-            backup_check(target_path,key)
-        end
-
+        check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
       end
+    end
+
+    def check_backuped_mysql(target_path, key)
+      self.changes << "DBCheck running -- checking #{target_path}/#{key}.sql #{Time.now}"
+      status = run_with_changes("mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
+      self.changes << "DBCheck finished #{status} -- #{Time.now}"
+    end
+
+    def commit_changes
+      Dir.chdir(@backup_path) do
+        run_with_changes("git init") unless system("git status")
+        run_with_changes("git add .")
+        run_with_changes("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
+      end
+    end
+
+    def run_with_changes(shell)
+      self.changes << "== #{shell}"
+      result = Backup::Main.run(shell)
+      self.subject_prefix = "[ERROR]" unless result
+      self.changes << result
+      result
     end
 
     def send_mail(message)
@@ -71,34 +89,10 @@ module Backup
 
         Backup::Main.email(:from => @server_config.email,
                            :to => @server_config.email,
-                           :subject => "#{@server.name} backed up at #{Time.now}",
+                           :subject => "#{self.subject_prefix} #{@server.name} backed up at #{Time.now}",
                            :body => message,
                            :charset => 'utf-8', :content_type => 'text/plain; charset=utf-8'
                           ) if @server_config.email
-      end
-    end
-
-    def backup_check(target_path,key)
-      puts "DBCheck running -- #{target_path}/#{key}.sql on checking"
-      if config.mysql_config[:password] == ""
-        status = system "mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql"
-      else
-        status = system "mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} -p#{config.mysql_config[:password]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql"
-      end
-
-      if !status 
-        message = "Error: #{target_path}/#{key}.sql can not be restored"
-        send_mail(message)
-      else
-        puts "everything is ok :)"
-      end
-    end
-
-    def commit_changes
-      Dir.chdir(@backup_path) do
-        (self.changes << Backup::Main.run("git init")) unless system("git status")
-        self.changes << Backup::Main.run("git add .")
-        self.changes << Backup::Main.run("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
       end
     end
   end
