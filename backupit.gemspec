@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{backupit}
-  s.version = "0.3.0"
+  s.version = "0.3.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jinzhu"]
-  s.date = %q{2011-10-03}
+  s.date = %q{2011-10-04}
   s.default_executable = %q{backup}
   s.description = %q{A tool to backup your servers}
   s.email = %q{wosmvp@gmail.com}
@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     ".document",
+    "Contributors",
     "LICENSE",
     "README.md",
     "Rakefile",
