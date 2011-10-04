@@ -8,7 +8,7 @@
     storage :file do
       path '/opt/backup/'
       mysql_check true
-      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:databases=>"checkdb"})
+      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
     end
 
     server 'delonghi' do

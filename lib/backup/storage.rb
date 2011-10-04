@@ -54,15 +54,22 @@ module Backup
         tmpfile = Tempfile.new('mysql.sql')
         run_with_changes("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
         run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
-        run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'"))
+        run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
         check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
       end
     end
 
     def check_backuped_mysql(target_path, key)
+      dbconfig = config.mysql_config
+
       self.changes << "DBCheck running -- checking #{target_path}/#{key}.sql #{Time.now}"
-      status = run_with_changes("mysql -h#{config.mysql_config[:host]} -u#{config.mysql_config[:user]} #{config.mysql_config[:databases]} < #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
+
+      mysql_command = "mysql -h#{dbconfig[:host]} -u#{dbconfig[:user]} #{dbconfig[:password] ? "-p#{dbconfig[:password]}" : ""}"
+      system("#{mysql_command} -e 'drop database #{dbconfig[:database]};'")
+      system("#{mysql_command} -e 'create database #{dbconfig[:database]};'")
+
+      status = run_with_changes("#{mysql_command} #{dbconfig[:database]} < #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
       self.changes << "DBCheck finished #{status} -- #{Time.now}"
     end
 
