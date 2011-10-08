@@ -50,6 +50,12 @@ module Backup
         mysql_config += " --databases #{mysql.databases.to_a.join(' ')}" if mysql.databases
         mysql_config += " --tables #{mysql.tables.to_a.join(' ')}" if mysql.tables
         mysql_config += " #{mysql.options}" if mysql.options
+        if mysql.skiptables
+          mysql.skiptables.map do | table |
+            mysql_config += " --ignore_table = #{mysql.databases}.#{table}"
+          end
+        end
+
 
         tmpfile = Tempfile.new('mysql.sql')
         run_with_changes("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&

@@ -17,14 +17,26 @@
 
       rsync ['/home/www/app/shared/config',{'/home/staging/app/shared/config' => 'staging_config'}, '/home/www/app/shared/attachments']
 
-      mysql 'delonghi' do
+      mysql 'delonghi_staging' do
         user      'root'
         password  'mypassword'
         options   '-h 192.168.1.100'
-        databases ['delonghi-staging', 'delonghi-production']
+        databases 'delonghi-staging'
         tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
+        skiptables    ['abc','dbc']  #tables ignore when dump
         check true
       end
+
+      mysql 'delonghi_production' do
+        user      'root'
+        password  'mypassword'
+        options   '-h 192.168.1.100'
+        databases 'delonghi-production'
+        tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
+        skiptables    ['adcd','fefe']  #tables ignore when dump
+        check true
+      end
+
     end
 
     server 'onitsukatiger' do
