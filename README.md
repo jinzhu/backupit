@@ -8,7 +8,7 @@
     storage :file do
       path '/opt/backup/'
       mysql_check true
-      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
+      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:databases=>"checkdb"})
     end
 
     server 'delonghi' do
@@ -17,26 +17,16 @@
 
       rsync ['/home/www/app/shared/config',{'/home/staging/app/shared/config' => 'staging_config'}, '/home/www/app/shared/attachments']
 
-      mysql 'delonghi_staging' do
+      mysql 'delonghi' do
         user      'root'
         password  'mypassword'
         options   '-h 192.168.1.100'
-        databases 'delonghi-staging'
+        databases ['delonghi-staging', 'delonghi-production']
         tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
-        skiptables    ['abc','dbc']  #tables ignore when dump
+        skiptables "abc,dbc"  #tables ignore when dump,only skip first databases' tables
+        #skiptables "abc,dbc","","feo,feog,gef"  #tables ignore when dump,second databases no skip
         check true
       end
-
-      mysql 'delonghi_production' do
-        user      'root'
-        password  'mypassword'
-        options   '-h 192.168.1.100'
-        databases 'delonghi-production'
-        tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
-        skiptables    ['adcd','fefe']  #tables ignore when dump
-        check true
-      end
-
     end
 
     server 'onitsukatiger' do
