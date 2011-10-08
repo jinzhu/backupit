@@ -50,15 +50,9 @@ module Backup
         mysql_config += " --databases #{mysql.databases.to_a.join(' ')}" if mysql.databases
         mysql_config += " --tables #{mysql.tables.to_a.join(' ')}" if mysql.tables
         mysql_config += " #{mysql.options}" if mysql.options
-        if mysql.skiptables
-          mysql.skiptables.to_a.map do | tables |
-            i = mysql.skiptables.index(tables)
-            if tables
-              tables.split(',').map do | table |
-                mysql_config += " --ignore_table = #{mysql.databases.at(i)}.#{table}"
-              end
-            end
-          end
+        mysql.skiptables && mysql.skiptables.to_a.map do |table|
+          table = table.include?('.') ? table : "#{mysql.databases.to_a[0]}.#{table}"
+          mysql_config += " --ignore_table=#{table}"
         end
 
         tmpfile = Tempfile.new('mysql.sql')

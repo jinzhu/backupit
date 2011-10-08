@@ -8,7 +8,7 @@
     storage :file do
       path '/opt/backup/'
       mysql_check true
-      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:databases=>"checkdb"})
+      mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
     end
 
     server 'delonghi' do
@@ -23,8 +23,18 @@
         options   '-h 192.168.1.100'
         databases ['delonghi-staging', 'delonghi-production']
         tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
-        skiptables "abc,dbc"  #tables ignore when dump,only skip first databases' tables
-        #skiptables "abc,dbc","","feo,feog,gef"  #tables ignore when dump,second databases no skip
+        skiptables ["delonghi-staging.users", 'delonghi-production.products']
+        # skiptables "delonghi-staging.products"
+        check true
+      end
+
+      mysql 'delonghi_dev' do
+        user      'root'
+        password  'mypassword'
+        options   '-h 192.168.1.100'
+        databases 'delonghi-dev'
+        tables    ['users','products'] # this would overwrite databases! `man mysqldump` for more help.
+        skiptables "user" #=> "delonghi_dev.user"
         check true
       end
     end
