@@ -34,8 +34,14 @@ module Backup
 
       @server_config.rsync.to_a.map do |path|
         remote_path = path.is_a?(Hash) ? path.first[0] : path
+        remote_path = remote_path.sub(/\/?$/,'/') if File.extname(remote_path).empty?
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
-        run_with_changes("rsync -ravk #{@rsync_host}:#{remote_path.sub(/\/?$/,'/')} '#{File.join(target_path, target_name)}'")
+        rsync_command = "rsync -ravkz"
+        rsync_command += "#{path['rsync_arg']}" if path.is_a?(Hash) and path.has_key?('rsync_arg')
+        rsync_command += " --rsync-path=\"sudo rsync\"" if path.is_a?(Hash) and path.has_key?('use_sudo') and path['use_sudo']
+        rsync_command += " #{@rsync_host}:#{remote_path} '#{File.join(target_path, target_name)}'"
+
+        run_with_changes("#{rsync_command}")
       end
     end
 
