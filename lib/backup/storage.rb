@@ -36,8 +36,12 @@ module Backup
         remote_path = path.is_a?(Hash) ? path.first[0] : path
         remote_path = remote_path.sub(/\/?$/,'/') if File.extname(remote_path).empty?
         target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
+        compress_level = 5
+        compress_level = @server_config.rsync_compress_level if @server_config.rsync_compress_level and (not @server_config.rsync_compress_level.nil?)
+
         rsync_command = "rsync -ravkz"
-        rsync_command += "#{path['rsync_arg']}" if path.is_a?(Hash) and path.has_key?('rsync_arg')
+        rsync_command += " --compress_level=#{compress_level}"
+        rsync_command += " #{path['rsync_arg']}" if path.is_a?(Hash) and path.has_key?('rsync_arg')
         rsync_command += " --rsync-path=\"sudo rsync\"" if path.is_a?(Hash) and path.has_key?('use_sudo') and path['use_sudo']
         rsync_command += " #{@rsync_host}:#{remote_path} '#{File.join(target_path, target_name)}'"
 

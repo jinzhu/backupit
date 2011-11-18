@@ -16,6 +16,7 @@
       port "222"
 
       rsync ['/home/www/app/shared/config',{'/home/staging/app/shared/config' => 'staging_config','rsync_arg' => 'q','use_sudo' => true }, '/home/www/app/shared/attachments']
+      rsync_compress_level '3'
 
       mysql 'delonghi' do
         user      'root'
@@ -58,6 +59,7 @@
     3, in storage , mysql_check(true | false) and mysql_config to check the backup can be restored
     4, in every mysql role, check mean to check the backup or not
     5, in rsync,{} path or files only in first place
+    6, rsync_compress_level , default is 5
 
 ## Note on Patches/Pull Requests
 
