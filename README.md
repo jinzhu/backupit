@@ -1,5 +1,8 @@
 # BackupIt
 
+## Dependence
+    Only running on ruby 1.8 not 1.9
+
 ## Install
     $ gem install backupit
 
