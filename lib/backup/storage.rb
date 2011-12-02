@@ -57,11 +57,11 @@ module Backup
         mysql_config = ""
         mysql_config += " -u#{mysql.user}" if mysql.user
         mysql_config += " -p#{mysql.password}" if mysql.password
-        mysql_config += " --databases #{mysql.databases.to_a.join(' ')}" if mysql.databases
-        mysql_config += " --tables #{mysql.tables.to_a.join(' ')}" if mysql.tables
+        mysql_config += " --databases #{mysql.databases.split("\n").join(' ')}" if mysql.databases
+        mysql_config += " --tables #{mysql.tables.split("\n").join(' ')}" if mysql.tables
         mysql_config += " #{mysql.options}" if mysql.options
-        mysql.skiptables && mysql.skiptables.to_a.map do |table|
-          table = table.include?('.') ? table : "#{mysql.databases.to_a[0]}.#{table}"
+        mysql.skiptables && mysql.skiptables.split("\n").map do |table|
+          table = table.include?('.') ? table : "#{mysql.databases.split("\n")[0]}.#{table}"
           mysql_config += " --ignore_table=#{table}"
         end
 
