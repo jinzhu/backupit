@@ -66,7 +66,7 @@ module Backup
         end
 
         tmpfile = Tempfile.new('mysql.sql')
-        run_with_changes("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'") &&
+        run_with_changes("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'",mysql_config) &&
         run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
         run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
@@ -95,9 +95,10 @@ module Backup
       end
     end
 
-    def run_with_changes(shell)
-      self.changes << "== #{shell}"
+    def run_with_changes(shell,remove_str="")
       result = Backup::Main.run(shell)
+      shell.slice! remove_str
+      self.changes << "== #{shell}"
       self.subject_prefix = "[ERROR]" unless result
       self.changes << result
       result
