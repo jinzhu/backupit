@@ -24,7 +24,10 @@ module Backup
       backup_rsync
       backup_mysql
       commit_changes
-      send_mail(changes.join("\n"))
+
+      if self.subject_prefix == "[ERROR]"
+        send_mail(changes.join("\n"))
+      end
     end
 
     def backup_rsync
