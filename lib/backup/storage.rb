@@ -35,10 +35,11 @@ module Backup
 
       FileUtils.mkdir_p target_path
 
+      arguments = ['use_sudo','rsync_arg']
+
       @server_config.rsync.to_a.map do |path|
-        remote_path = path.is_a?(Hash) ? path.first[0] : path
-        remote_path = remote_path.sub(/\/?$/,'/') if File.extname(remote_path).empty?
-        target_name = File.basename(path.is_a?(Hash) ? path.first[1] : path)
+        remote_path = path.is_a?(Hash) ? (path.keys - arguments) : path
+        target_name = File.basename(path.is_a?(Hash) ? path["#{remote_path}"] : path)
         compress_level = 5
         compress_level = @server_config.rsync_compress_level if @server_config.rsync_compress_level and (not @server_config.rsync_compress_level.nil?)
 
