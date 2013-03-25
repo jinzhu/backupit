@@ -38,7 +38,7 @@ module Backup
       arguments = ['use_sudo','rsync_arg']
 
       @server_config.rsync.to_a.map do |path|
-        remote_path = path.is_a?(Hash) ? (path.keys - arguments) : path
+        remote_path = path.is_a?(Hash) ? (path.keys - arguments).first : path
         target_name = File.basename(path.is_a?(Hash) ? path["#{remote_path}"] : path)
         compress_level = 5
         compress_level = @server_config.rsync_compress_level if @server_config.rsync_compress_level and (not @server_config.rsync_compress_level.nil?)
