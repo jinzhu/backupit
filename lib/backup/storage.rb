@@ -95,7 +95,8 @@ module Backup
       Dir.chdir(@backup_path) do
         run_with_changes("git init") unless system("git status")
         run_with_changes("git add .")
-        run_with_changes("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'")
+        commited = `git status --untracked-files=no | wc -l`.strip!
+        run_with_changes("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'") if commited.to_i > 2
       end
     end
 
