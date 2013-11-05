@@ -69,15 +69,18 @@ module Backup
           mysql_config += " --ignore_table=#{table}"
         end
 
+        backup_file = "#{target_path}/#{key}.sql"
+
         tmpfile = Tempfile.new('mysql.sql')
         run_with_changes("ssh #{@ssh_host} 'mysqldump #{mysql_config} > #{tmpfile.path}'",mysql_config) &&
-        run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
+        run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{backup_file}'") &&
         run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
         check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
 
         if config.gpg_enable
-          run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} #{target_path}/#{key}.sql")
+          system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
+          run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} -o #{backup_file}.gpg #{backup_file}")
           run_with_changes("rm #{target_path}/#{key}.sql")
         end
       end
