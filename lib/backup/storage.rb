@@ -74,12 +74,12 @@ module Backup
         run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{target_path}/#{key}.sql'") &&
         run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
+        check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
+
         if config.gpg_enable
           run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} #{target_path}/#{key}.sql")
           run_with_changes("rm #{target_path}/#{key}.sql")
         end
-
-        check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
       end
     end
 
