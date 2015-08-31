@@ -110,7 +110,7 @@ module Backup
         postgresql_set_password = "PGPASSWORD=\"#{postgresql.password}\"" if postgresql.password
 
         tmpfile = Tempfile.new('postgresql.sql')
-        run_with_changes("ssh #{@ssh_host} '#{postgresql_set_password}; pg_dump #{postgresql_config} > #{tmpfile.path}'",postgresql_config) &&
+        run_with_changes("ssh #{@ssh_host} '#{postgresql_set_password}; pg_dump #{postgresql_config} > #{tmpfile.path}'", postgresql_set_password) &&
         run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{backup_file}'") &&
         run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
@@ -146,7 +146,7 @@ module Backup
       end
     end
 
-    def run_with_changes(shell,remove_str="")
+    def run_with_changes(shell, remove_str="")
       result = Backup::Main.run(shell)
       shell.slice! remove_str
       self.changes << "== #{shell}"
