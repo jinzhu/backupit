@@ -23,6 +23,7 @@ module Backup
 
       backup_rsync
       backup_mysql
+      backup_postgresql
       commit_changes
 
       if self.subject_prefix == "[ERROR]"
@@ -77,6 +78,43 @@ module Backup
         run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
         check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
+
+        if config.gpg_enable
+          system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
+          run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} -o #{backup_file}.gpg #{backup_file}")
+          run_with_changes("rm #{target_path}/#{key}.sql")
+        end
+      end
+    end
+
+    def backup_postgresql
+      target_path = File.join(@backup_path, "postgresql")
+      FileUtils.mkdir_p target_path
+
+      @server_config.postgresql.map do |key, postgresql|
+        postgresql_config = " "
+        postgresql_config += " -d #{postgresql.databases.split("\n").join(' ')}" if postgresql.databases
+        postgresql_config += " -U #{postgresql.user}" if postgresql.user
+        postgresql_config += " -h #{postgresql.host}" if postgresql.host
+        postgresql.tables && postgresql.tables.split("\n").map do |table|
+          postgresql_config += " -t #{table}"
+        end
+        postgresql_config += " #{postgresql.options}" if postgresql.options
+        postgresql.skiptables && postgresql.skiptables.split("\n").map do |table|
+          table = table.include?('.') ? table : "#{postgresql.databases.split("\n")[0]}.#{table}"
+          postgresql_config += " -T #{table}"
+        end
+
+        backup_file = "#{target_path}/#{key}.sql"
+
+        postgresql_set_password = "PGPASSWORD=\"#{postgresql.password}\"" if postgresql.password
+
+        tmpfile = Tempfile.new('postgresql.sql')
+        run_with_changes("ssh #{@ssh_host} '#{postgresql_set_password}; pg_dump #{postgresql_config} > #{tmpfile.path}'",postgresql_config) &&
+        run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{backup_file}'") &&
+        run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
+
+        #check_backuped_postgresql(target_path, key) if config.postgresql_check and (postgresql.check || postgresql.check.nil?)
 
         if config.gpg_enable
           system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")

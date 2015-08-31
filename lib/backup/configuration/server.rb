@@ -15,6 +15,18 @@ module Backup
 
         @mysqls
       end
+
+      def postgresql(name=nil,&block)
+        @postgresqls ||= {}
+
+        if block
+          name ||= "postgresql_#{@servers.keys.size}"
+          @postgresqls[name] = Backup::Configuration::Postgresql.new
+          @postgresqls[name].instance_eval &block
+        end
+
+        @postgresqls
+      end
     end
   end
 end

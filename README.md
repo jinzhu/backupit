@@ -54,6 +54,14 @@
         databases 'ot_staging'
         check false
       end
+
+      postgresql 'app' do
+        user      'root'
+        password  'mytopsecret'
+        databases 'ot_staging'
+        tables    ['users','products']
+        skiptables "user" #=> "app.user"
+      end
     end
 
 ## Usage
