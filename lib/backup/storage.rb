@@ -79,11 +79,7 @@ module Backup
 
         check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
 
-        if config.gpg_enable
-          system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
-          run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} -o #{backup_file}.gpg #{backup_file}")
-          run_with_changes("rm #{target_path}/#{key}.sql")
-        end
+        encrypt_with_gpg(backup_file, gpg_id, backup_name) if config.gpg_enable
       end
     end
 
@@ -92,7 +88,7 @@ module Backup
       FileUtils.mkdir_p target_path
 
       @server_config.postgresql.map do |key, postgresql|
-        postgresql_config = " "
+        postgresql_config = ""
         postgresql_config += " -d #{postgresql.databases.split("\n").join(' ')}" if postgresql.databases
         postgresql_config += " -U #{postgresql.user}" if postgresql.user
         postgresql_config += " -h #{postgresql.host}" if postgresql.host
@@ -116,12 +112,18 @@ module Backup
 
         check_backuped_postgresql(target_path, key) if config.postgresql_check and (postgresql.check || postgresql.check.nil?)
 
-        if config.gpg_enable
-          system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
-          run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} -o #{backup_file}.gpg #{backup_file}")
-          run_with_changes("rm #{target_path}/#{key}.sql")
-        end
+        encrypt_with_gpg(backup_file, gpg_id, backup_name) if config.gpg_enable
       end
+    end
+
+    def encrypt_with_gpg(backup_file, gpg_id, backup_name)
+      if !Backup::Main.run("gpg --search-keys --keyserver hkp://keys.gnupg.net #{gpg_id}")
+        Backup::Main.run("gpg --keyserver hkp://keys.gnupg.net --recv #{gpg_id}")
+      end
+
+      system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
+      run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} -o #{backup_file}.gpg #{backup_file}")
+      run_with_changes("rm #{target_path}/#{key}.sql")
     end
 
     def check_backuped_mysql(target_path, key)
