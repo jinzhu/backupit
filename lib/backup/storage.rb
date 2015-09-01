@@ -79,7 +79,7 @@ module Backup
 
         check_backuped_mysql(target_path, key) if config.mysql_check and (mysql.check || mysql.check.nil?)
 
-        encrypt_with_gpg(backup_file, gpg_id, backup_name) if config.gpg_enable
+        encrypt_with_gpg(backup_file, config.gpg_id, key) if config.gpg_enable
       end
     end
 
@@ -112,7 +112,7 @@ module Backup
 
         check_backuped_postgresql(target_path, key) if config.postgresql_check and (postgresql.check || postgresql.check.nil?)
 
-        encrypt_with_gpg(backup_file, gpg_id, backup_name) if config.gpg_enable
+        encrypt_with_gpg(backup_file, config.gpg_id, key) if config.gpg_enable
       end
     end
 
@@ -122,8 +122,8 @@ module Backup
       end
 
       system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
-      run_with_changes("gpg --trust-model always  -e -r #{config.gpg_id} -o #{backup_file}.gpg #{backup_file}")
-      run_with_changes("rm #{target_path}/#{key}.sql")
+      run_with_changes("gpg --trust-model always -e -r #{gpg_id} -o #{backup_file}.gpg #{backup_file}")
+      run_with_changes("rm #{target_path}/#{backup_name}.sql")
     end
 
     def check_backuped_mysql(target_path, key)
