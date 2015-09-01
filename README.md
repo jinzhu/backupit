@@ -11,8 +11,10 @@
     storage :file do
       path '/opt/backup/'
       mysql_check true
+      postgresql_check true
       gpg_enable true
       mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
+      postgresql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
       gpg_id 'gpg_name'
     end
 
