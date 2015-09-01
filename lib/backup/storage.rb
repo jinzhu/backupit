@@ -114,7 +114,7 @@ module Backup
         run_with_changes("scp #{@scp_host}:#{tmpfile.path} '#{backup_file}'") &&
         run_with_changes("ssh #{@ssh_host} 'rm #{tmpfile.path}'")
 
-        #check_backuped_postgresql(target_path, key) if config.postgresql_check and (postgresql.check || postgresql.check.nil?)
+        check_backuped_postgresql(target_path, key) if config.postgresql_check and (postgresql.check || postgresql.check.nil?)
 
         if config.gpg_enable
           system("rm #{backup_file}.gpg") if File.exist?("#{backup_file}.gpg")
@@ -134,6 +134,19 @@ module Backup
       system("#{mysql_command} -e 'create database #{dbconfig[:database]};'")
 
       status = run_with_changes("#{mysql_command} #{dbconfig[:database]} < #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
+      self.changes << "DBCheck finished #{status} -- #{Time.now}"
+    end
+
+    def check_backuped_postgresql(target_path, key)
+      dbconfig = config.postgresql_config
+
+      self.changes << "DBCheck running -- checking #{target_path}/#{key}.sql #{Time.now}"
+
+      postgresql_command = ""
+      postgresql_command += " PGPASSWORD=\"#{dbconfig[:password]}\"" if dbconfig[:password]
+      postgresql_command += " pg_restore -e -O -n public -i -c #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""}"
+
+      status = run_with_changes("#{postgresql_command} -d #{dbconfig[:database]} -v #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
       self.changes << "DBCheck finished #{status} -- #{Time.now}"
     end
 
