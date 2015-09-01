@@ -117,7 +117,7 @@ module Backup
     end
 
     def encrypt_with_gpg(backup_file, gpg_id, backup_name)
-      if !Backup::Main.run("gpg --search-keys --keyserver hkp://keys.gnupg.net #{gpg_id}")
+      if !Backup::Main.run("gpg --fingerprint #{gpg_id}")
         Backup::Main.run("gpg --keyserver hkp://keys.gnupg.net --recv #{gpg_id}")
       end
 
