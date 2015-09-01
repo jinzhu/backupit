@@ -15,7 +15,7 @@
       gpg_enable true
       mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
       postgresql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
-      gpg_id 'gpg_name'
+      gpg_id 'gpg_name' #use user id would be great
     end
 
     server 'delonghi' do
