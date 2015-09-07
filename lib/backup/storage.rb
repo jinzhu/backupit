@@ -144,6 +144,9 @@ module Backup
 
       self.changes << "DBCheck running -- checking #{target_path}/#{key}.sql #{Time.now}"
 
+      system("dropdb -U #{dbconfig[:user]} #{dbconfig[:database]}")
+      system("createdb -U #{dbconfig[:user]} #{dbconfig[:database]}")
+
       postgresql_command = ""
       postgresql_command += " PGPASSWORD=\"#{dbconfig[:password]}\"" if dbconfig[:password]
       postgresql_command += " pg_restore -e -O -n public -i -c #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""}"

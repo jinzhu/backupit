@@ -11,7 +11,7 @@
     storage :file do
       path '/opt/backup/'
       mysql_check true
-      postgresql_check true
+      postgresql_check true # make sure the user in postgresql_config is the one who run this script
       gpg_enable true
       mysql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
       postgresql_config({:host=>"localhost",:user=>"root",:password=>"test",:database=>"checkdb"})
