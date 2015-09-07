@@ -149,7 +149,7 @@ module Backup
 
       postgresql_command = ""
       postgresql_command += " PGPASSWORD=\"#{dbconfig[:password]}\"" if dbconfig[:password]
-      postgresql_command += " pg_restore -e -O -n public -i -c #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""}"
+      postgresql_command += " pg_restore -e -O -n public -i #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""}"
 
       status = run_with_changes("#{postgresql_command} -d #{dbconfig[:database]} -v #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
       self.changes << "DBCheck finished #{status} -- #{Time.now}"
