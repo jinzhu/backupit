@@ -131,7 +131,7 @@ module Backup
 
       self.changes << "DBCheck running -- checking #{target_path}/#{key}.sql #{Time.now}"
 
-      mysql_command = "mysql -h#{dbconfig[:host]} -u#{dbconfig[:user]} #{dbconfig[:password] ? "-p#{dbconfig[:password]}" : ""}"
+      mysql_command = "mysql -s -h#{dbconfig[:host]} -u#{dbconfig[:user]} #{dbconfig[:password] ? "-p#{dbconfig[:password]}" : ""}"
       system("#{mysql_command} -e 'drop database #{dbconfig[:database]};'")
       system("#{mysql_command} -e 'create database #{dbconfig[:database]};'")
 
@@ -149,7 +149,7 @@ module Backup
 
       postgresql_command = ""
       postgresql_command += " PGPASSWORD=\"#{dbconfig[:password]}\"" if dbconfig[:password]
-      postgresql_command += " pg_restore -e -O -x -n public -i #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""}"
+      postgresql_command += " pg_restore -e -O -x -n public -i #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""} -f /tmp/pg_restore.log"
 
       status = run_with_changes("#{postgresql_command} -d #{dbconfig[:database]} -v #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
       self.changes << "DBCheck finished #{status} -- #{Time.now}"
