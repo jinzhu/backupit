@@ -131,7 +131,7 @@ module Backup
 
       self.changes << "DBCheck running -- checking #{target_path}/#{key}.sql #{Time.now}"
 
-      mysql_command = "mysql -h#{dbconfig[:host]} -u#{dbconfig[:user]} #{dbconfig[:password] ? "-p#{dbconfig[:password]}" : ""}"
+      mysql_command = "mysql -s -h#{dbconfig[:host]} -u#{dbconfig[:user]} #{dbconfig[:password] ? "-p#{dbconfig[:password]}" : ""}"
       system("#{mysql_command} -e 'drop database #{dbconfig[:database]};'")
       system("#{mysql_command} -e 'create database #{dbconfig[:database]};'")
 
@@ -151,16 +151,16 @@ module Backup
       postgresql_command += " PGPASSWORD=\"#{dbconfig[:password]}\"" if dbconfig[:password]
       postgresql_command += " pg_restore -e -O -x -n public -i #{dbconfig[:host] ? "-h #{dbconfig[:host]}" : ""}"
 
-      status = run_with_changes("#{postgresql_command} -d #{dbconfig[:database]} -v #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
+      status = run_with_changes("#{postgresql_command} -d #{dbconfig[:database]} #{target_path}/#{key}.sql") ? "SUCCESSFUL" : "FAILURE"
       self.changes << "DBCheck finished #{status} -- #{Time.now}"
     end
 
     def commit_changes
       Dir.chdir(@backup_path) do
-        run_with_changes("git init") unless system("git status")
+        run_with_changes("git init") unless system("git status > /dev/null")
         run_with_changes("git add .")
         commited = `git status --untracked-files=no | wc -l`.strip!
-        run_with_changes("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}'") if commited.to_i > 2
+        run_with_changes("git commit -am '#{Time.now.strftime("%Y-%m-%d %H:%M")}' --quiet") if commited.to_i > 2
       end
     end
 

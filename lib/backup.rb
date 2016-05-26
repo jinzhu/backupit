@@ -28,7 +28,7 @@ module Backup
     end
 
     def self.run(shell)
-      puts shell.red
+      puts shell.red if @@options[:verbose]
       if @@options[:pretend]
         true
       else
